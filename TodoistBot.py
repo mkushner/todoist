@@ -1,4 +1,4 @@
-# setup
+# setup modules
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
 from google.cloud import speech
 from google.cloud.speech import enums
@@ -13,10 +13,11 @@ import io
 import random
 import google.cloud.proto.speech.v1.cloud_speech_pb2 as direct_gcall
 
+#setup env variable - Google Auth
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"]="YOUR_GA_CRED_FILE"
 
 updater = Updater(
-    token='YOUR_TG_API_TOKEN')  # API Telegram
+    token='YOUR_TG_API_TOKEN')  # provide Telegram Bot Token here
 dispatcher = updater.dispatcher
 
 # command processing
@@ -24,7 +25,7 @@ def startCommand(bot, update):
     bot.send_message(chat_id=update.message.chat_id,
                      text='Tell me your next task')
 
-#get msg
+# get voice command
 def audioMessage(bot, update):  
 
     request_audio = update.message.voice  # get message data/voice type
@@ -47,7 +48,7 @@ def audioMessage(bot, update):
             CreateTodoistTask(voice_response_text)             
          
     else:
-        print("\nNo voice input provided, please try again")              
+        bot.send_message(chat_id=update.message.chat_id, text='Task name not resolved, please try again')               
 
 # GoogleCloud recognition
 def VoiceRecognitionG(b_voice_data): 
@@ -55,7 +56,7 @@ def VoiceRecognitionG(b_voice_data):
 
     audio = direct_gcall.RecognitionAudio(content=b_voice_data)
     config = direct_gcall.RecognitionConfig(
-        encoding = enums.RecognitionConfig.AudioEncoding.OGG_OPUS,
+        encoding = enums.RecognitionConfig.AudioEncoding.OGG_OPUS, # setup default Telegram format
         sample_rate_hertz = 48000,
         language_code = 'ru-RU',
         max_alternatives = 0)
@@ -73,13 +74,13 @@ def VoiceRecognitionG(b_voice_data):
         return rec_voice    
 
 def CreateTodoistTask (taskname):
-    # initialize the API object
 
-    token = 'YOUR_TD_TOKEN'
+    # initialize the API object
+    token = 'YOUR_TD_TOKEN' # Todoist API token
     api = TodoistAPI(token)
 
     # Create a new task
-    api.items.add(taskname, None, date_string='today')
+    api.items.add(taskname, None, date_string='today') # default task setup
 
     # commit
     api.commit()
